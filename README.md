@@ -9,7 +9,7 @@ Fauna is an awesome database but its JavaScript driver is a little bit outdated.
 ## Goals
 
 - TypeScript source code is a must nowadays.
-- API should be typed and well documented.
+- API should be almost the same but typed and well documented.
 - Types should be validated/parsed also in run-time. When we use io-ts, we can have it for free.
 - Fauna models must be serializable via JSON.stringify. Using getters and override toJSON is a design flaw. While Fauna can later switch to something different like Protocol buffers etc., the users of Fauna driver have to have the ability to send Fauna types to clients and back, which is almost impossible right now.
 
