@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.es6.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationDir": "./dist/types",
+    "declarationMap": true,
+    "emitDeclarationOnly": true
+  }
+}
