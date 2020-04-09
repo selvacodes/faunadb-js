@@ -106,7 +106,9 @@ export const CreateCollection = t.type({
 });
 export type CreateCollection = t.TypeOf<typeof CreateCollection>;
 
-// TODP: Refactor to generic Ref probably.
+// TODO:
+//  - Refactor to generic Ref probably.
+//  - Create CollectionRefFromCollectionRefRaw (with id etc.)
 export const CollectionRef = t.type({
   '@ref': t.type({
     id: t.string,
@@ -118,9 +120,17 @@ export const CollectionRef = t.type({
 export type CollectionRef = t.TypeOf<typeof CollectionRef>;
 
 export const Collection = t.type({
+  name: t.string,
   ref: CollectionRef,
   ts: DateFromFaunaLong,
   history_days: t.number,
-  name: t.string,
 });
 export type Collection = t.TypeOf<typeof Collection>;
+
+export const Delete = t.type({
+  delete: t.type({ collection: t.string }), // Will be union.
+});
+export type Delete = t.TypeOf<typeof Delete>;
+
+export const Expression = t.union([CreateCollection, Delete]);
+export type Expression = t.TypeOf<typeof Expression>;
