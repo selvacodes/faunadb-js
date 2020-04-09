@@ -10,31 +10,17 @@ const testFauna = async (): Promise<void> => {
     secret: 'fnADo6xlx5ACAA8eeCgfcfLaur_pfQtzs7-WerW4',
   });
 
-  // await client.query(q.CreateCollection({ name: 'users' }));
+  const Response = t.type({
+    resource: types.Collection,
+  });
 
-  // // Data sent to the server.
-  // const a: t.OutputOf<typeof types.CreateCollection> = {
-  //   create_collection: { object: { name: 'users' } },
-  // };
-  // const e = types.CreateCollection.decode(a);
-  // console.log(e._tag === 'Right'); // true
+  const response = await client.functionalQuery(
+    Response,
+    q.createCollection({ name: 'users' }),
+  );
 
-  // Data returned from the server.
-  const a = {
-    resource: {
-      ref: {
-        '@ref': { id: 'users', collection: { '@ref': { id: 'collections' } } },
-      },
-      ts: 1586353329640000,
-      history_days: 30,
-      name: 'users',
-    },
-  } as const;
-  const c: t.OutputOf<typeof types.Collection> = a.resource;
-  // const collection: t.OutputOf<typeof types.Collection> = a.resource;
-  const e = types.Collection.decode(c);
   // eslint-disable-next-line no-console
-  console.log(e._tag === 'Right'); // true
+  console.log(response);
 
   // Error returned from the server.
   // const a = {
@@ -54,8 +40,6 @@ const testFauna = async (): Promise<void> => {
   //     },
   //   ],
   // };
-  await client.query(q.createCollection({ name: 'users' }));
-  await Promise.resolve();
 };
 
 const Home = (): ReactNode => {

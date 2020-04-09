@@ -1,4 +1,5 @@
 import { RequestResult, CreateCollection } from './types';
+import * as t from 'io-ts';
 import fetch from 'cross-fetch';
 
 /**
@@ -91,15 +92,15 @@ export class Client {
     this.customFetch = customFetch;
   }
 
-  // TODO: Generic or schema? Generic now, schema later.
-  // TaskEither, must!
   /**
    * Executes a query via the FaunaDB Query API.
    * See the [docs](https://app.fauna.com/documentation/reference/queryapi),
    * and the query functions in this documentation.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  query(expression: CreateCollection): Promise<unknown> {
+  functionalQuery(type: t.Any, expression: CreateCollection): Promise<unknown> {
     throw '';
   }
+
+  // TODO: query via functionalQuery
 }
