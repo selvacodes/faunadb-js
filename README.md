@@ -14,3 +14,8 @@ Fauna is an awesome database but its JavaScript driver is a little bit outdated.
 - Fauna models must be serializable via JSON.stringify. Using getters and override toJSON is a design flaw. While Fauna can later switch to something different like Protocol buffers etc., the users of Fauna driver have to have the ability to send Fauna types to clients and back, which is almost impossible right now.
 
 So I set up the repo with tree-shakeable TypeScript library, eslint, jest, etc., and made Client stub. I am not sure how much time I will have to complete it, but I believe this is a good start.
+
+## Development
+
+- `yarn`
+- `yarn dev`

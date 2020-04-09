@@ -17,5 +17,7 @@ module.exports = {
   rules: {
     // No console in production.
     'no-console': 'error',
+    // Fauna uses it internally.
+    '@typescript-eslint/camelcase': 'off',
   },
 };

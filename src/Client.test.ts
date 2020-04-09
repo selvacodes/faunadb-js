@@ -18,7 +18,12 @@ test('custom domain', () => {
   expect(client.baseUrl).toBe('https://db.flora.com:443');
 });
 
-test('http scheme', () => {
+test('custom scheme', () => {
   const client = new Client({ scheme: 'http' });
   expect(client.baseUrl).toBe('http://db.fauna.com:80');
+});
+
+test('custom secret', () => {
+  const client = new Client({ secret: '123' });
+  expect(client.secret).toBe('123');
 });

@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.es6.json",
+  "extends": "./tsconfig.lib.es6.json",
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,

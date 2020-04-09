@@ -1,5 +1,5 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "./tsconfig.lib.base.json",
   "compilerOptions": {
     "noEmit": false,
     "module": "commonjs",
