@@ -1,4 +1,4 @@
-# faunadb-js
+# faunadb-js [![CircleCI](https://circleci.com/gh/steida/faunadb-js.svg?style=svg)](https://circleci.com/gh/steida/faunadb-js)
 
 Unofficial driver
 
