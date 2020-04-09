@@ -1,6 +1,7 @@
 import { RequestResult, CreateCollection } from './types';
 import * as t from 'io-ts';
 import fetch from 'cross-fetch';
+import * as TE from 'fp-ts/lib/TaskEither';
 
 /**
  * The callback that will be executed after every completed request.
@@ -98,7 +99,12 @@ export class Client {
    * and the query functions in this documentation.
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  functionalQuery(type: t.Any, expression: CreateCollection): Promise<unknown> {
+  functionalQuery<R extends t.Any>(
+    type: R,
+    expression: CreateCollection,
+  ): TE.TaskEither<unknown, t.TypeOf<typeof type>> {
+    // eslint-disable-next-line no-console
+    console.log(expression);
     throw '';
   }
 

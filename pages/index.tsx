@@ -1,4 +1,5 @@
 import * as t from 'io-ts';
+import * as E from 'fp-ts/lib/Either';
 import { ReactNode, useEffect } from 'react';
 
 // This is dev playground.
@@ -17,10 +18,15 @@ const testFauna = async (): Promise<void> => {
   const response = await client.functionalQuery(
     Response,
     q.createCollection({ name: 'users' }),
-  );
+  )();
 
-  // eslint-disable-next-line no-console
-  console.log(response);
+  if (E.isRight(response)) {
+    // eslint-disable-next-line no-console
+    console.log(response.right.resource.ts.getDate());
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(response.left);
+  }
 
   // Error returned from the server.
   // const a = {
