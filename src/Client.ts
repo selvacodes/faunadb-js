@@ -1,9 +1,10 @@
 import btoa from 'btoa-lite';
 import crossFetch from 'cross-fetch';
+import * as E from 'fp-ts/lib/Either';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TE from 'fp-ts/lib/TaskEither';
-import * as E from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
+import { PathReporter } from 'io-ts/lib/PathReporter';
 import urlParse from 'url-parse';
 import { Expression, FaunaError, RequestResponse } from './types';
 
@@ -112,18 +113,9 @@ export class Client {
   ): TE.TaskEither<unknown, t.TypeOf<typeof resource>> {
     const encodedExpression = Expression.encode(expression);
     const body = JSON.stringify(encodedExpression);
-
     return pipe(
       this.performRequest('POST', { body }),
-      TE.chain((requestResponse) =>
-        pipe(
-          t.type({ resource }).decode(requestResponse.response),
-          // TODO: DecodeError? tErrors?
-          E.mapLeft(() => ({ type: 'FaunaHttpError' })),
-          E.map((response) => response.resource),
-          TE.fromEither,
-        ),
-      ),
+      TE.chain(this.decodeResponse(resource)),
     );
   }
 
@@ -193,11 +185,13 @@ export class Client {
       TE.chain(({ endTime, headers, status, json }) => {
         // https://github.com/steida/faunadb-js/issues/12
         // if (status < 200 || status >= 300) {
+        // console.log(json);
+
         if (status >= 400) {
           switch (status) {
             case 400:
               // TODO: Decode
-              return TE.left({ type: 'FaunaHttpError' });
+              return TE.left({ errors: [{ type: 'FaunaHttpError' }] });
             // case 401:
             //   throw new Unauthorized(requestResult);
             // case 403:
@@ -228,4 +222,20 @@ export class Client {
       }),
     );
   }
+
+  private decodeResponse = <R extends t.Any>(resource: R) => (
+    requestResponse: RequestResponse,
+  ): TE.TaskEither<FaunaError, t.TypeOf<typeof resource>> =>
+    pipe(
+      t.type({ resource }).decode(requestResponse.response),
+      // Note we have to map to FaunaError to make TypeScript happy.
+      // That's because TypeScript evaluates from the right.
+      // https://github.com/gcanti/fp-ts/issues/904
+      E.mapLeft<t.Errors, FaunaError>((tErrors) => ({
+        type: 'FaunaDecodeError',
+        errors: PathReporter.report(E.left(tErrors)),
+      })),
+      E.map((response) => response.resource),
+      TE.fromEither,
+    );
 }

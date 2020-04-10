@@ -3,6 +3,7 @@ import * as t from 'io-ts';
 
 // Notes:
 //  - All types are io-ts types, so we can serialize/deserialize them safely.
+//    It not only improves reliability but also opens a lot of fancy use cases.
 //  - We don't use branded types (like FaunaID, Days, etc.),
 //    because it would confuse people. To be reconsidered later.
 //  - We don't use t.strict, because it only removes props.
@@ -10,7 +11,7 @@ import * as t from 'io-ts';
 // Errors
 
 /**
- * Fetch error. It can happen when network is down.
+ * Fetch error. It happens when network is down.
  */
 export const FaunaFetchError = t.type({
   type: t.literal('FaunaFetchError'),
@@ -19,15 +20,35 @@ export const FaunaFetchError = t.type({
 export type FaunaFetchError = t.TypeOf<typeof FaunaFetchError>;
 
 /**
- * Errors returned by the FaunaDB server.
+ * Decode error. It happens when Fauna client can't decode FaunaDB response.
  */
-// TODO: Union.
+export const FaunaDecodeError = t.type({
+  type: t.literal('FaunaDecodeError'),
+  errors: t.array(t.string),
+});
+export type FaunaDecodeError = t.TypeOf<typeof FaunaDecodeError>;
+
+/**
+ * One error returned by the FaunaDB server.
+ */
 export const FaunaHttpError = t.type({
   type: t.literal('FaunaHttpError'),
 });
 export type FaunaHttpError = t.TypeOf<typeof FaunaHttpError>;
 
-export const FaunaError = t.union([FaunaFetchError, FaunaHttpError]);
+/**
+ * Errors returned by the FaunaDB server.
+ */
+export const FaunaHttpErrors = t.type({
+  errors: t.array(FaunaHttpError),
+});
+export type FaunaHttpErrors = t.TypeOf<typeof FaunaHttpErrors>;
+
+export const FaunaError = t.union([
+  FaunaFetchError,
+  FaunaDecodeError,
+  FaunaHttpErrors,
+]);
 export type FaunaError = t.TypeOf<typeof FaunaError>;
 
 // Models
@@ -125,8 +146,7 @@ export const CreateCollection = t.type({
          * are removed. Not setting ttl_days retains documents forever.
          */
         ttl_days: t.number,
-        // TODO:
-        // permissions: Permissions
+        // TODO: permissions: Permissions
       }),
     ]),
   }),
