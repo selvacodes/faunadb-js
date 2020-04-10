@@ -28,7 +28,6 @@ export const FaunaDecodeError = t.type({
 });
 export type FaunaDecodeError = t.TypeOf<typeof FaunaDecodeError>;
 
-// Just factory.
 const faunaHttpError = <C extends string, P extends string>(
   code: C,
   position: P,
@@ -59,17 +58,36 @@ export type FaunaHttpErrorInvalidRef = t.TypeOf<
 /**
  * Errors returned by the FaunaDB server.
  */
-export const FaunaHttpErrors = t.type({
+export const FaunaHttpErrorsRaw = t.type({
   errors: t.array(
     t.union([FaunaHttpErrorInstanceAlreadyExists, FaunaHttpErrorInvalidRef]),
   ),
 });
+export type FaunaHttpErrorsRaw = t.TypeOf<typeof FaunaHttpErrorsRaw>;
+
+/**
+ * `FaunaHttpErrorsRaw` with prop `type` for exhaustiveness checking.
+ */
+export const FaunaHttpErrors = t.intersection([
+  FaunaHttpErrorsRaw,
+  t.type({ type: t.literal('FaunaHttpErrors') }),
+]);
 export type FaunaHttpErrors = t.TypeOf<typeof FaunaHttpErrors>;
+
+/**
+ * Unknown errors returned by the FaunaDB server.
+ */
+export const FaunaUnknownHttpErrors = t.type({
+  type: t.literal('FaunaUnknownHttpErrors'),
+  errors: t.array(t.unknown),
+});
+export type FaunaUnknownHttpErrors = t.TypeOf<typeof FaunaUnknownHttpErrors>;
 
 export const FaunaError = t.union([
   FaunaFetchError,
   FaunaDecodeError,
   FaunaHttpErrors,
+  FaunaUnknownHttpErrors,
 ]);
 export type FaunaError = t.TypeOf<typeof FaunaError>;
 

@@ -9,7 +9,7 @@ import urlParse from 'url-parse';
 import {
   Expression,
   FaunaError,
-  FaunaHttpErrors,
+  FaunaHttpErrorsRaw,
   RequestResponse,
 } from './types';
 
@@ -185,8 +185,17 @@ export class Client {
         (error) => ({ type: 'FaunaFetchError', message: String(error) }),
       ),
       TE.chain(({ endTime, headers, status, json }) => {
-        // console.log(json);
-        if (FaunaHttpErrors.is(json)) return TE.left(json);
+        const SomeFaunaErrors = t.type({ errors: t.array(t.unknown) });
+        // We don't check HTTP status. We care about data only.
+        if (SomeFaunaErrors.is(json)) {
+          if (FaunaHttpErrorsRaw.is(json))
+            return TE.left({ ...json, type: 'FaunaHttpErrors' });
+          return TE.left({
+            type: 'FaunaUnknownHttpErrors',
+            errors: json.errors,
+          });
+        }
+
         return TE.right({
           method,
           path,
