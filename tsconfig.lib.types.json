@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.lib.es6.json",
   "compilerOptions": {
-    "noEmit": false,
     "declaration": true,
     "declarationDir": "./dist/types",
     "declarationMap": true,

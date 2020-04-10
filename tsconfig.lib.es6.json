@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.lib.base.json",
   "compilerOptions": {
-    "noEmit": false,
     "module": "es6",
     "outDir": "./dist/es6"
   }
