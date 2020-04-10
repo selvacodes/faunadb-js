@@ -21,7 +21,7 @@ export const collection = (name: string): CollectionRef => ({
 
 /**
  * https://docs.fauna.com/fauna/current/api/fql/functions/delete
- * delete_ with underscore suffix, becase it's reverved word.
+ * delete_ with underscore suffix, becase it's reserved word.
  */
 export const delete_ = (ref: CollectionRef): Delete => ({
   delete: { collection: ref['@ref'].id },
