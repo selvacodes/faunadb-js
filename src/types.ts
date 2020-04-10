@@ -28,19 +28,28 @@ export const FaunaDecodeError = t.type({
 });
 export type FaunaDecodeError = t.TypeOf<typeof FaunaDecodeError>;
 
+// TODO: It will be more generic or union.
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 const faunaHttpError = <C extends string, P extends string>(
   code: C,
   position: P,
-): t.TypeC<{
-  code: t.LiteralC<C>;
-  description: t.StringC;
-  position: t.TupleC<[t.LiteralC<P>]>;
-}> =>
-  t.type({
-    code: t.literal(code),
-    description: t.string,
-    position: t.tuple([t.literal(position)]),
-  });
+) =>
+  t.intersection([
+    t.type({
+      code: t.literal(code),
+      description: t.string,
+      position: t.tuple([t.literal(position)]),
+    }),
+    t.partial({
+      failures: t.array(
+        t.type({
+          code: t.literal('duplicate value'),
+          description: t.string,
+          field: t.array(t.string),
+        }),
+      ),
+    }),
+  ]);
 
 export const FaunaHttpErrorInstanceAlreadyExists = faunaHttpError(
   'instance already exists',
@@ -55,12 +64,26 @@ export type FaunaHttpErrorInvalidRef = t.TypeOf<
   typeof FaunaHttpErrorInvalidRef
 >;
 
+export const FaunaHttpErrorValidationFailed = faunaHttpError(
+  'validation failed',
+  'create_collection',
+);
+export type FaunaHttpErrorValidationFailed = t.TypeOf<
+  typeof FaunaHttpErrorValidationFailed
+>;
+
+//
+
 /**
  * Errors returned by the FaunaDB server.
  */
 export const FaunaHttpErrorsRaw = t.type({
   errors: t.array(
-    t.union([FaunaHttpErrorInstanceAlreadyExists, FaunaHttpErrorInvalidRef]),
+    t.union([
+      FaunaHttpErrorInstanceAlreadyExists,
+      FaunaHttpErrorInvalidRef,
+      FaunaHttpErrorValidationFailed,
+    ]),
   ),
 });
 export type FaunaHttpErrorsRaw = t.TypeOf<typeof FaunaHttpErrorsRaw>;
