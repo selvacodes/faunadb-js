@@ -2,6 +2,9 @@ import { ReactNode, useEffect } from 'react';
 // import { Client, query as q } from 'faunadb';
 import { Client, query as q, types } from '../src';
 
+import * as E from 'fp-ts/lib/Either';
+import { FaunaHttpErrors } from '../src/types';
+
 const testFauna = async (): Promise<void> => {
   const client = new Client({
     secret: 'fnADo6xlx5ACAA8eeCgfcfLaur_pfQtzs7-WerW4',
@@ -10,10 +13,17 @@ const testFauna = async (): Promise<void> => {
   const response = await client.functionalQuery(
     types.Collection,
     q.createCollection({ name: 'a' }),
-    // q.delete_(q.collection('r')),
+    // q.delete_(q.collection('a')),
   )();
+  // Just an example.
+  if (E.isLeft(response)) {
+    if (FaunaHttpErrors.is(response.left)) {
+      // eslint-disable-next-line no-console
+      console.log(response.left.errors[0].code);
+    }
+  }
   // eslint-disable-next-line no-console
-  console.log(response);
+  // console.log(response);
 
   // {"resource":{"ref":{"@ref":{"id":"users","collection":{"@ref":{"id":"collections"}}}},"ts":1586353329640000,"history_days":30,"name":"users"}}
   // {"errors":[{"position":["delete"],"code":"invalid ref","description":"Ref refers to undefined collection 'users'"}]}

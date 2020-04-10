@@ -6,7 +6,12 @@ import * as TE from 'fp-ts/lib/TaskEither';
 import * as t from 'io-ts';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import urlParse from 'url-parse';
-import { Expression, FaunaError, RequestResponse } from './types';
+import {
+  Expression,
+  FaunaError,
+  FaunaHttpErrors,
+  RequestResponse,
+} from './types';
 
 /**
  * The callback that will be executed after every completed request.
@@ -110,7 +115,7 @@ export class Client {
   functionalQuery<R extends t.Any>(
     resource: R,
     expression: Expression,
-  ): TE.TaskEither<unknown, t.TypeOf<typeof resource>> {
+  ): TE.TaskEither<FaunaError, t.TypeOf<typeof resource>> {
     const encodedExpression = Expression.encode(expression);
     const body = JSON.stringify(encodedExpression);
     return pipe(
@@ -183,31 +188,7 @@ export class Client {
         (error) => ({ type: 'FaunaFetchError', message: String(error) }),
       ),
       TE.chain(({ endTime, headers, status, json }) => {
-        // https://github.com/steida/faunadb-js/issues/12
-        // if (status < 200 || status >= 300) {
-        // console.log(json);
-
-        if (status >= 400) {
-          switch (status) {
-            case 400:
-              // TODO: Decode
-              return TE.left({ errors: [{ type: 'FaunaHttpError' }] });
-            // case 401:
-            //   throw new Unauthorized(requestResult);
-            // case 403:
-            //   throw new PermissionDenied(requestResult);
-            // case 404:
-            //   throw new NotFound(requestResult);
-            // case 405:
-            //   throw new MethodNotAllowed(requestResult);
-            // case 500:
-            //   throw new InternalError(requestResult);
-            // case 503:
-            //   throw new UnavailableError(requestResult);
-            // default:
-            //   throw new FaunaHTTPError('UnknownError', requestResult);
-          }
-        }
+        if (FaunaHttpErrors.is(json)) return TE.left(json);
         return TE.right({
           method,
           path,
@@ -228,13 +209,13 @@ export class Client {
   ): TE.TaskEither<FaunaError, t.TypeOf<typeof resource>> =>
     pipe(
       t.type({ resource }).decode(requestResponse.response),
-      // Note we have to map to FaunaError to make TypeScript happy.
-      // That's because TypeScript evaluates from the right.
-      // https://github.com/gcanti/fp-ts/issues/904
-      E.mapLeft<t.Errors, FaunaError>((tErrors) => ({
-        type: 'FaunaDecodeError',
-        errors: PathReporter.report(E.left(tErrors)),
-      })),
+      E.mapLeft(
+        (tErrors) =>
+          ({
+            type: 'FaunaDecodeError',
+            errors: PathReporter.report(E.left(tErrors)),
+          } as const),
+      ),
       E.map((response) => response.resource),
       TE.fromEither,
     );

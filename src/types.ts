@@ -28,19 +28,20 @@ export const FaunaDecodeError = t.type({
 });
 export type FaunaDecodeError = t.TypeOf<typeof FaunaDecodeError>;
 
-/**
- * One error returned by the FaunaDB server.
- */
-export const FaunaHttpError = t.type({
-  type: t.literal('FaunaHttpError'),
+export const FaunaHttpErrorInstanceAlreadyExists = t.type({
+  code: t.literal('instance already exists'),
+  description: t.literal('Collection already exists.'),
+  position: t.tuple([t.literal('create_collection')]),
 });
-export type FaunaHttpError = t.TypeOf<typeof FaunaHttpError>;
+export type FaunaHttpErrorInstanceAlreadyExists = t.TypeOf<
+  typeof FaunaHttpErrorInstanceAlreadyExists
+>;
 
 /**
  * Errors returned by the FaunaDB server.
  */
 export const FaunaHttpErrors = t.type({
-  errors: t.array(FaunaHttpError),
+  errors: t.array(FaunaHttpErrorInstanceAlreadyExists),
 });
 export type FaunaHttpErrors = t.TypeOf<typeof FaunaHttpErrors>;
 
