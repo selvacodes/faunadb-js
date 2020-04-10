@@ -28,20 +28,41 @@ export const FaunaDecodeError = t.type({
 });
 export type FaunaDecodeError = t.TypeOf<typeof FaunaDecodeError>;
 
-export const FaunaHttpErrorInstanceAlreadyExists = t.type({
-  code: t.literal('instance already exists'),
-  description: t.literal('Collection already exists.'),
-  position: t.tuple([t.literal('create_collection')]),
-});
+// Just factory.
+const faunaHttpError = <C extends string, P extends string>(
+  code: C,
+  position: P,
+): t.TypeC<{
+  code: t.LiteralC<C>;
+  description: t.StringC;
+  position: t.TupleC<[t.LiteralC<P>]>;
+}> =>
+  t.type({
+    code: t.literal(code),
+    description: t.string,
+    position: t.tuple([t.literal(position)]),
+  });
+
+export const FaunaHttpErrorInstanceAlreadyExists = faunaHttpError(
+  'instance already exists',
+  'create_collection',
+);
 export type FaunaHttpErrorInstanceAlreadyExists = t.TypeOf<
   typeof FaunaHttpErrorInstanceAlreadyExists
+>;
+
+export const FaunaHttpErrorInvalidRef = faunaHttpError('invalid ref', 'delete');
+export type FaunaHttpErrorInvalidRef = t.TypeOf<
+  typeof FaunaHttpErrorInvalidRef
 >;
 
 /**
  * Errors returned by the FaunaDB server.
  */
 export const FaunaHttpErrors = t.type({
-  errors: t.array(FaunaHttpErrorInstanceAlreadyExists),
+  errors: t.array(
+    t.union([FaunaHttpErrorInstanceAlreadyExists, FaunaHttpErrorInvalidRef]),
+  ),
 });
 export type FaunaHttpErrors = t.TypeOf<typeof FaunaHttpErrors>;
 

@@ -188,6 +188,7 @@ export class Client {
         (error) => ({ type: 'FaunaFetchError', message: String(error) }),
       ),
       TE.chain(({ endTime, headers, status, json }) => {
+        // console.log(json);
         if (FaunaHttpErrors.is(json)) return TE.left(json);
         return TE.right({
           method,
