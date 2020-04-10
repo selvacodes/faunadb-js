@@ -21,6 +21,7 @@
     "build-lib:es6": "tsc -p tsconfig.lib.es6.json",
     "build-lib:types": "tsc -p tsconfig.lib.types.json",
     "build-lib": "yarn clean-dist && yarn build-lib:cjs && yarn build-lib:es6 && yarn build-lib:types",
+    "prepare": "yarn build-lib",
     "test": "yarn lint && yarn tsc && yarn jest && yarn build-lib",
     "docs": "docs-ts && mv docs ../../docs",
     "dev": "next dev",
