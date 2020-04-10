@@ -3,7 +3,6 @@
   "compilerOptions": {
     "noEmit": false,
     "module": "es6",
-    "outDir": "./dist/es6",
-    "target": "es6"
+    "outDir": "./dist/es6"
   }
 }
