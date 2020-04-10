@@ -3,10 +3,11 @@ import React, { useEffect } from 'react';
 import * as E from 'fp-ts/lib/Either';
 import * as TE from 'fp-ts/lib/TaskEither';
 import { pipe } from 'fp-ts/lib/pipeable';
+import { absurd } from 'fp-ts/lib/function';
 
 const client = new Client({
-  // TODO: Explain how to get key secret.
-  secret: 'fnADo6xlx5ACAA8eeCgfcfLaur_pfQtzs7-WerW4',
+  // TODO: Explain how to create Fauna test DB and get its key secret.
+  secret: '',
 });
 
 const Home = () => {
@@ -45,8 +46,24 @@ const Home = () => {
         response,
         E.fold(
           (error) => {
-            // Log error.
-            console.log(error);
+            // Note all errors have to be handled. It's ensured via absurd.
+            // https://www.typescriptlang.org/docs/handbook/advanced-types.html#exhaustiveness-checking
+            switch (error.type) {
+              case 'FaunaDecodeError':
+                console.log(error.errors);
+                break;
+              case 'FaunaFetchError':
+                console.log(error.message);
+                break;
+              case 'FaunaHttpErrors':
+                console.log(error.errors);
+                break;
+              case 'FaunaUnknownHttpErrors':
+                console.log(error.errors);
+                break;
+              default:
+                absurd(error);
+            }
           },
           (result) => {
             // Log created collection name. Note everything is safely typed.
