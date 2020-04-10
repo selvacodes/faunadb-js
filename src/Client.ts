@@ -2,6 +2,7 @@ import btoa from 'btoa-lite';
 import crossFetch from 'cross-fetch';
 import { pipe } from 'fp-ts/lib/pipeable';
 import * as TE from 'fp-ts/lib/TaskEither';
+import * as E from 'fp-ts/lib/Either';
 import * as t from 'io-ts';
 import urlParse from 'url-parse';
 import { Expression, FaunaError, RequestResponse } from './types';
@@ -106,37 +107,27 @@ export class Client {
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   functionalQuery<R extends t.Any>(
-    type: R,
+    resource: R,
     expression: Expression,
-  ): TE.TaskEither<unknown, t.TypeOf<typeof type>> {
+  ): TE.TaskEither<unknown, t.TypeOf<typeof resource>> {
     const encodedExpression = Expression.encode(expression);
     const body = JSON.stringify(encodedExpression);
 
-    // TODO: Pipe.
-    this.performRequest('POST', { body })().then((response) => {
-      // eslint-disable-next-line no-console
-      console.log(response);
-    });
-
-    // eslint-disable-next-line no-console
-    // console.log(encodedExpression);
-    // Dev test.
-    return TE.fromEither(
-      type.decode({
-        resource: {
-          ref: {
-            '@ref': {
-              id: 'users',
-              collection: { '@ref': { id: 'collections' } },
-            },
-          },
-          ts: 1586353329640000,
-          history_days: 30,
-          name: 'users',
-        },
-      }),
+    return pipe(
+      this.performRequest('POST', { body }),
+      TE.chain((requestResponse) =>
+        pipe(
+          t.type({ resource }).decode(requestResponse.response),
+          // TODO: DecodeError? tErrors?
+          E.mapLeft(() => ({ type: 'FaunaHttpError' })),
+          E.map((response) => response.resource),
+          TE.fromEither,
+        ),
+      ),
     );
   }
+
+  // TODO: query via functionalQuery with generic argument only.
 
   // /**
   //  * Sends a `ping` request to FaunaDB.
@@ -237,6 +228,4 @@ export class Client {
       }),
     );
   }
-
-  // TODO: query via functionalQuery
 }

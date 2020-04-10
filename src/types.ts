@@ -21,9 +21,9 @@ export type FaunaFetchError = t.TypeOf<typeof FaunaFetchError>;
 /**
  * Errors returned by the FaunaDB server.
  */
+// TODO: Union.
 export const FaunaHttpError = t.type({
   type: t.literal('FaunaHttpError'),
-  // TODO
 });
 export type FaunaHttpError = t.TypeOf<typeof FaunaHttpError>;
 
