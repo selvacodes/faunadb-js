@@ -1,16 +1,15 @@
+import btoa from 'btoa-lite';
 import crossFetch from 'cross-fetch';
+import { pipe } from 'fp-ts/lib/pipeable';
 import * as TE from 'fp-ts/lib/TaskEither';
 import * as t from 'io-ts';
 import urlParse from 'url-parse';
-import { Expression, RequestResult } from './types';
-import btoa from 'btoa-lite';
+import { Expression, FaunaError, RequestResponse } from './types';
 
 /**
  * The callback that will be executed after every completed request.
  */
-export interface ClientObserver {
-  (requestResult: RequestResult): void;
-}
+type ClientObserver = (requestResponse: RequestResponse) => void;
 
 type ClientFetch = typeof crossFetch;
 
@@ -54,6 +53,12 @@ export interface ClientConfig {
  */
 export class Client {
   static APIVersion = '2.7';
+
+  static headersToRecord = (headers: Headers): Record<string, string> => {
+    const record: Record<string, string> = {};
+    for (const [key, value] of headers.entries()) record[key] = value;
+    return record;
+  };
 
   /** URL for the FaunaDB server. */
   readonly baseUrl: string;
@@ -105,17 +110,16 @@ export class Client {
     expression: Expression,
   ): TE.TaskEither<unknown, t.TypeOf<typeof type>> {
     const encodedExpression = Expression.encode(expression);
-    // pipe? nebo await? pipe bere hodne, hmm, ok, pipe neni treba
-    // return this.execute('POST')
-    // expression encode a pak stringify a mam body
-    // var startTime = Date.now()
-    // _performRequest
-    // var endTime = Date.now()
-    // var responseText = response.text
-    // var responseObject = json.parseJSON(responseText)
+    const body = JSON.stringify(encodedExpression);
+
+    // TODO: Pipe.
+    this.performRequest('POST', { body })().then((response) => {
+      // eslint-disable-next-line no-console
+      console.log(response);
+    });
 
     // eslint-disable-next-line no-console
-    console.log(encodedExpression);
+    // console.log(encodedExpression);
     // Dev test.
     return TE.fromEither(
       type.decode({
@@ -134,35 +138,103 @@ export class Client {
     );
   }
 
+  // /**
+  //  * Sends a `ping` request to FaunaDB.
+  //  * @return {external:Promise<string>} Ping response.
+  //  */
+  // Client.prototype.ping = function(scope, timeout) {
+  // return this._execute('GET', 'ping', null, { scope: scope, timeout: timeout })
+  // }
+
   private getAuthorizationHeaders(): { Authorization: string } | null {
     if (this.secret == null) return null;
     return { Authorization: `Basic ${btoa(this.secret)}` };
   }
 
-  // TODO: Handle errors.
-  private execute(
-    method: 'POST' | 'GET',
+  private performRequest(
+    method: RequestResponse['method'],
     {
-      pathname = '',
       body = undefined,
-    }: { pathname?: string; body?: string } = {},
-  ): TE.TaskEither<unknown, string> {
+      path = '',
+    }: {
+      body?: string;
+      path?: string;
+      // TODO: query
+    } = {},
+  ): TE.TaskEither<FaunaError, RequestResponse> {
     const url = urlParse(this.baseUrl);
-    if (pathname) url.set('pathname', pathname);
-    return TE.tryCatch(
-      () =>
-        this.fetch(url.href, {
+    url.set('pathname', path);
+    // TODO: url.set('query', query)
+    const startTime = Date.now();
+
+    return pipe(
+      TE.tryCatch<
+        FaunaError,
+        {
+          endTime: number;
+          headers: Record<string, string>;
+          status: number;
+          json: unknown;
+        }
+      >(
+        () =>
+          this.fetch(url.href, {
+            method,
+            body,
+            headers: {
+              ...this.headers,
+              ...this.getAuthorizationHeaders(),
+              'X-FaunaDB-API-Version': Client.APIVersion,
+              'X-Fauna-Driver': 'Javascript',
+              // TODO: 'X-Last-Seen-Txn': this._lastSeen,
+            },
+          }).then((response) => {
+            const endTime = Date.now();
+            return response.json().then((json) => ({
+              endTime,
+              headers: Client.headersToRecord(response.headers),
+              status: response.status,
+              json,
+            }));
+          }),
+        (error) => ({ type: 'FaunaFetchError', message: String(error) }),
+      ),
+      TE.chain(({ endTime, headers, status, json }) => {
+        // https://github.com/steida/faunadb-js/issues/12
+        // if (status < 200 || status >= 300) {
+        if (status >= 400) {
+          switch (status) {
+            case 400:
+              // TODO: Decode
+              return TE.left({ type: 'FaunaHttpError' });
+            // case 401:
+            //   throw new Unauthorized(requestResult);
+            // case 403:
+            //   throw new PermissionDenied(requestResult);
+            // case 404:
+            //   throw new NotFound(requestResult);
+            // case 405:
+            //   throw new MethodNotAllowed(requestResult);
+            // case 500:
+            //   throw new InternalError(requestResult);
+            // case 503:
+            //   throw new UnavailableError(requestResult);
+            // default:
+            //   throw new FaunaHTTPError('UnknownError', requestResult);
+          }
+        }
+        return TE.right({
           method,
-          body,
-          headers: {
-            ...this.headers,
-            ...this.getAuthorizationHeaders(),
-            'X-FaunaDB-API-Version': Client.APIVersion,
-            'X-Fauna-Driver': 'Javascript',
-            // 'X-Last-Seen-Txn': this._lastSeen,
-          },
-        }).then((response) => response.text()),
-      (error) => error,
+          path,
+          statusCode: status,
+          responseHeaders: headers,
+          startTime,
+          endTime,
+          timeTaken: endTime - startTime,
+          request: body,
+          response: json,
+        });
+      }),
     );
   }
 
