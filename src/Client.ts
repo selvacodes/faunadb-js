@@ -216,13 +216,12 @@ export class Client {
   ): TE.TaskEither<FaunaError, t.TypeOf<typeof resource>> =>
     pipe(
       t.type({ resource }).decode(requestResponse.response),
-      E.mapLeft(
-        (tErrors) =>
-          ({
-            type: 'FaunaDecodeError',
-            errors: PathReporter.report(E.left(tErrors)),
-          } as const),
-      ),
+      // TypeScript resolves types from the right, so we have to help it.
+      // https://github.com/gcanti/fp-ts/issues/904
+      E.mapLeft<t.Errors, FaunaError>((tErrors) => ({
+        type: 'FaunaDecodeError',
+        errors: PathReporter.report(E.left(tErrors)),
+      })),
       E.map((response) => response.resource),
       TE.fromEither,
     );
