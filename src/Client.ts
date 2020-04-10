@@ -108,11 +108,8 @@ export class Client {
 
   /**
    * Executes a query via the FaunaDB Query API.
-   * See the [docs](https://app.fauna.com/documentation/reference/queryapi),
-   * and the query functions in this documentation.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  functionalQuery<R extends t.Any>(
+  query<R extends t.Any>(
     resource: R,
     expression: Expression,
   ): TE.TaskEither<FaunaError, t.TypeOf<typeof resource>> {

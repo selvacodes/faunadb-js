@@ -8,11 +8,19 @@ const testFauna = async (): Promise<void> => {
     secret: 'fnADo6xlx5ACAA8eeCgfcfLaur_pfQtzs7-WerW4',
   });
 
-  const response = await client.functionalQuery(
+  const response = await client.query(
     types.Collection,
     // q.createCollection({ name: 'a' }),
     q.delete_(q.collection('a')),
   )();
+
+  // await client.query(
+  //   q.Create(q.Collection('users'), {
+  //     credentials: { password: 'aaaaa' },
+  //     data: { email: 'a@a.com' },
+  //   }),
+  // );
+
   // Just an example.
   if (E.isLeft(response)) {
     // eslint-disable-next-line no-console
@@ -22,10 +30,7 @@ const testFauna = async (): Promise<void> => {
     console.log(response.right);
   }
 
-  // {"resource":{"ref":{"@ref":{"id":"users","collection":{"@ref":{"id":"collections"}}}},"ts":1586353329640000,"history_days":30,"name":"users"}}
-  // {"errors":[{"position":["delete"],"code":"invalid ref","description":"Ref refers to undefined collection 'users'"}]}
-  // const response = await client.query(q.CreateCollection({ name: 'c' }));
-  // console.log(response);
+  // TOHLE!
   // const a = {
   //   errors: [
   //     {
